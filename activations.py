@@ -1,31 +1,32 @@
 import numpy as np
 
 class AbstractActivation:
-    def f(self, u):
+    def f(self, u, out_a):
         raise NotImplementedError("f not implemented")
 
     def df(self, u, a):
         raise NotImplementedError("f not implemented")
 
 class ReLUActivation(AbstractActivation):
-    def f(self, u):
-        r = u.copy()
-        r[r < 0.0] = 0.0
-        return r
+    def f(self, u, out_a):
+        out_a[:] = u
+        out_a[out_a < 0.0] = 0.0
+        return out_a
 
-    def df(self, u, a):
-        r = u.copy()
-        r[r < 0] = 0
-        r[r > 0] = 1
-        return r
+    def df(self, u, a, out_da):
+        out_da[:] = u
+        out_da[out_da < 0] = 0
+        out_da[out_da > 0] = 1
+        return out_da
 
 
 class SoftmaxActivation(AbstractActivation):
-    def f(self, u):
-        exps = np.exp(u)
-        sum_exps = np.sum(exps)
-        exps /= sum_exps
-        return exps
+    def f(self, u, out_a):
+        np.exp(u, out=out_a)
+        sum_exps = np.sum(out_a)
+        out_a /= sum_exps
+        return out_a
 
-    def df(self, u, a):
-        return a * (1 - a)
+    def df(self, u, a, out_da):
+        out_da[:] = a * (1 - a)
+        return out_da
