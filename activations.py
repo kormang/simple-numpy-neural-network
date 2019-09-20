@@ -23,8 +23,8 @@ class ReLUActivation(AbstractActivation):
 class SoftmaxActivation(AbstractActivation):
     def f(self, u, out_a):
         np.exp(u, out=out_a)
-        sum_exps = np.sum(out_a)
-        out_a /= sum_exps
+        sum_exps = np.sum(out_a, axis=1)
+        np.divide(out_a, sum_exps.reshape((len(sum_exps), 1)), out=out_a)
         return out_a
 
     def df(self, u, a, out_da):

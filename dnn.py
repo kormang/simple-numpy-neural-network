@@ -18,45 +18,55 @@ class Classifier:
         for layer in reversed(self.layers):
             delta_w = layer.backward(delta_w)
 
-    def train(self, x, y, max_iter = 100, alpha = 0.1, target_acc = 0.99, batch_size = 600):
+    def train(self, x, y, max_iter = 100, learning_rate = 0.1, target_acc = 0.99, batch_size = 600):
         self.cost_history = []
         N = x.shape[0]
 
+        rnd = np.random.RandomState()
+
         for l in self.layers:
-            l.prepare_training()
+            l.prepare_training(batch_size)
 
         for iter in range(max_iter):
+            seed = np.random.randint(0, 321242341)
+            rnd.seed(seed)
+            rnd.shuffle(x)
+            rnd.seed(seed)
+            rnd.shuffle(y)
+
             correct_guesses = 0
-            for bn in range(0, N, min(batch_size, N)):
+            for n in range(0, N, batch_size):
+                yb = y[n:min(n+batch_size, N)]
                 cost = 0
                 for l in self.layers:
                     l.grad_w[:] = 0
                     l.grad_b[:] = 0
 
-                for n in range(bn, min(bn + batch_size, N)):
-                    # forward pass
-                    a = self.forward_pass(x[n])
-                    correct_guesses += int(np.argmax(a) == np.argmax(y[n]))
+                # forward pass
+                a = self.forward_pass(x[n:min(n+batch_size, N)])
 
-                    # calculate cost
-                    sample_cost, delta_w = self.cost_function(a, y[n])
-                    delta_w /= batch_size
+                correct_guesses += np.sum(
+                    np.argmax(a, axis=1) == np.argmax(yb, axis=1))
 
-                    # backward pass
-                    self.backward_pass(delta_w)
+                # calculate cost
+                sample_cost, delta_w = self.cost_function(a, yb)
+                delta_w /= min(batch_size, N - n)
 
-                    cost += sample_cost / batch_size
+                # backward pass
+                self.backward_pass(delta_w)
+
+                cost += sample_cost / min(batch_size, N - n)
 
                 # We use simple gradient descent
                 # this could be refactored to accomodate different optimizers
                 # but it works for now, and its efficient enough
                 for l in self.layers:
-                    l.w -= alpha * l.grad_w
-                    l.b -= alpha * l.grad_b
+                    l.w -= learning_rate * l.grad_w
+                    l.b -= learning_rate * l.grad_b
 
-                print_progress_bar(n+1, N,
+                print_progress_bar(min(n+batch_size, N), N,
                     prefix="epoch: {0:03}".format(iter+1),
-                    suffix = "{}/{} cost: {:.5f}".format(n+1, N, cost),
+                    suffix = "{}/{} cost: {:.5f}".format(min(n+batch_size, N), N, cost),
                     length = 50)
                 self.cost_history.append(cost)
 
@@ -128,5 +138,5 @@ class Classifier:
     def predict(self, x):
         r = np.empty((x.shape[0], self.layers[-1].outputs))
         for i in range(x.shape[0]):
-            r[i, :] = self.forward_pass(x[i])
+            r[i, :] = self.forward_pass(x[i:i+1])
         return r
