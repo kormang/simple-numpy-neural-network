@@ -6,8 +6,6 @@ from layers import DenseLayer, SoftmaxCrossEntropyLayer
 from activations import ReLUActivation
 from cost import softmax_cross_entropy
 from utils import compute_classification_accuracy
-import pylab
-import warnings
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -25,6 +23,9 @@ parser.add_argument("-m", "--max-iter",
 parser.add_argument("-b", "--batch-size",
                     dest="batch_size", default="600",
                     help="batch size")
+parser.add_argument("-c", "--save-learning-curve",
+                    dest="save_learning_curve", action="store_true",
+                    help="dumps learning curve graph to learning_curve.png")
 
 args = parser.parse_args()
 
@@ -33,9 +34,6 @@ sizes = [int(s) for s in args.sizes.split(",")]
 learning_rate = float(args.learning_rate)
 max_iter = int(args.max_iter)
 batch_size = int(args.batch_size)
-
-# hide GLibc warning caused by matplotlib/pylab
-warnings.simplefilter("ignore")
 
 # grad_check_classifier = Classifier([
 #     DenseLayer(4, 6, ReLUActivation()),
@@ -85,11 +83,6 @@ classifier.train(training_images, training_labels,
     target_acc=0.99,
     batch_size=batch_size)
 
-pylab.figure()
-pylab.plot(classifier.cost_history)
-pylab.title("Learning curve")
-pylab.savefig("learning_curve.png")
-
 predictions = classifier.predict(training_images)
 accuracy = compute_classification_accuracy(predictions, training_labels)
 print("Training accuracy {0:.2f}%".format(100 * accuracy))
@@ -97,5 +90,16 @@ print("Training accuracy {0:.2f}%".format(100 * accuracy))
 predictions = classifier.predict(test_images)
 accuracy = compute_classification_accuracy(predictions, test_labels)
 print("Test accuracy {0:.2f}%".format(100 * accuracy))
+
+if args.save_learning_curve:
+    import pylab
+    import warnings
+    # hide GLibc warning caused by matplotlib/pylab
+    warnings.simplefilter("ignore")
+
+    pylab.figure()
+    pylab.plot(classifier.cost_history)
+    pylab.title("Learning curve")
+    pylab.savefig("learning_curve.png")
 
 print ("Done")
