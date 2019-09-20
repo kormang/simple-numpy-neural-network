@@ -80,7 +80,7 @@ classifier = Classifier(layers, softmax_cross_entropy)
 classifier.train(training_images, training_labels,
     max_iter=max_iter,
     learning_rate=learning_rate,
-    target_acc=0.99,
+    target_acc=0.999,
     batch_size=batch_size)
 
 predictions = classifier.predict(training_images)
