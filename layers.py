@@ -48,7 +48,7 @@ class DenseLayer:
 
         # einsum magic: compute outer products of each row of a_prev with its pair in delta
         # and sum them along axis 0
-        np.einsum('...ij,ik->...jk', self.a_prev, self.delta, out=self.grad_w_delta)
+        np.einsum('...ij,ik->...jk', self.a_prev, self.delta, out=self.grad_w_delta, optimize="optimal")
 
         self.grad_w += self.grad_w_delta
         self.grad_b += np.sum(self.delta, axis=0)
@@ -67,7 +67,7 @@ class SoftmaxCrossEntropyLayer(DenseLayer):
 
         # einsum magic: compute outer products of each row of a_prev with its pair in delta
         # and sum them along axis 0
-        np.einsum('...ij,ik->...jk', self.a_prev, delta_next, out=self.grad_w_delta)
+        np.einsum('...ij,ik->...jk', self.a_prev, delta_next, out=self.grad_w_delta, optimize="optimal")
 
         self.grad_w += self.grad_w_delta
         self.grad_b += np.sum(delta_next, axis=0)
